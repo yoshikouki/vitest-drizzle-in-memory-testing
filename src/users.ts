@@ -13,7 +13,11 @@ export type User = NewUser & {
 };
 
 export class UserRepository {
-  constructor(private readonly db: PgliteDatabase) {}
+  private readonly db: PgliteDatabase;
+
+  constructor(db: PgliteDatabase) {
+    this.db = db;
+  }
 
   async create(user: NewUser): Promise<User> {
     const [result] = await this.db.insert(usersTable).values(user).returning();

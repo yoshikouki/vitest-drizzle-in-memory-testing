@@ -4,7 +4,7 @@ import type { NewUser, User } from "./users";
 import { UserRepository } from "./users";
 
 describe("UserRepository", () => {
-  const userRepository = new UserRepository(testDb);
+  const userRepository = new UserRepository();
 
   const testUser: NewUser = {
     name: "Test User",

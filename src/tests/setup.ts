@@ -15,7 +15,7 @@ const testClient = new PGlite();
 export const testDb = drizzle(testClient, { schema });
 
 // Move the mock implementation to a factory function
-vi.mock("@/lib/db", (): DbModule => {
+vi.mock("@/db", (): DbModule => {
   return {
     __esModule: true,
     get client(): PGlite {
