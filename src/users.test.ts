@@ -1,10 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { testDb } from "./tests/setup";
 import type { NewUser, User } from "./users";
 import { UserRepository } from "./users";
 
 describe("UserRepository", () => {
-  const userRepository = new UserRepository();
+  const userRepository = new UserRepository(testDb);
+  let createdUser: User;
 
   const testUser: NewUser = {
     name: "Test User",
@@ -12,10 +13,19 @@ describe("UserRepository", () => {
     email: "test@example.com",
   };
 
+  beforeEach(async () => {
+    createdUser = await userRepository.create(testUser);
+  });
+
   describe("create", () => {
     it("should create a new user", async () => {
-      const user = await userRepository.create(testUser);
-      expect(user).toMatchObject(testUser);
+      const newUser: NewUser = {
+        name: "Another User",
+        age: 30,
+        email: "another@example.com",
+      };
+      const user = await userRepository.create(newUser);
+      expect(user).toMatchObject(newUser);
       expect(user.id).toBeDefined();
     });
 
@@ -26,7 +36,8 @@ describe("UserRepository", () => {
     });
 
     it("should not allow duplicate emails", async () => {
-      await expect(userRepository.create(testUser)).rejects.toThrow();
+      const duplicateUser = { ...testUser };
+      await expect(userRepository.create(duplicateUser)).rejects.toThrow();
     });
   });
 
@@ -53,34 +64,27 @@ describe("UserRepository", () => {
   });
 
   describe("find operations", () => {
-    let createdUser: User;
-
     it("should find all users", async () => {
-      createdUser = await userRepository.create({
-        name: "Find Test User",
-        age: 28,
-        email: "find@example.com",
-      });
-
       const users = await userRepository.findAll();
       expect(users.length).toBeGreaterThan(0);
+      expect(users[0]).toMatchObject(testUser);
     });
 
     it("should find user by id", async () => {
       const user = await userRepository.findById(createdUser.id);
       expect(user).toMatchObject({
         id: createdUser.id,
-        name: "Find Test User",
-        email: "find@example.com",
+        name: testUser.name,
+        email: testUser.email,
       });
     });
 
     it("should find user by email", async () => {
-      const user = await userRepository.findByEmail("find@example.com");
+      const user = await userRepository.findByEmail(testUser.email);
       expect(user).toMatchObject({
         id: createdUser.id,
-        name: "Find Test User",
-        email: "find@example.com",
+        name: testUser.name,
+        email: testUser.email,
       });
     });
 
@@ -91,25 +95,17 @@ describe("UserRepository", () => {
   });
 
   describe("update", () => {
-    let userToUpdate: User;
-
     it("should update user information", async () => {
-      userToUpdate = await userRepository.create({
-        name: "Update Test User",
-        age: 40,
-        email: "update@example.com",
-      });
-
-      const updatedUser = await userRepository.update(userToUpdate.id, {
+      const updatedUser = await userRepository.update(createdUser.id, {
         name: "Updated Name",
         age: 41,
       });
 
       expect(updatedUser).toMatchObject({
-        id: userToUpdate.id,
+        id: createdUser.id,
         name: "Updated Name",
         age: 41,
-        email: "update@example.com",
+        email: testUser.email,
       });
     });
 
@@ -120,17 +116,9 @@ describe("UserRepository", () => {
   });
 
   describe("delete", () => {
-    let userToDelete: User;
-
     it("should delete a user", async () => {
-      userToDelete = await userRepository.create({
-        name: "Delete Test User",
-        age: 50,
-        email: "delete@example.com",
-      });
-
-      await userRepository.delete(userToDelete.id);
-      const deleted = await userRepository.findById(userToDelete.id);
+      await userRepository.delete(createdUser.id);
+      const deleted = await userRepository.findById(createdUser.id);
       expect(deleted).toBeUndefined();
     });
 
@@ -140,16 +128,8 @@ describe("UserRepository", () => {
   });
 
   describe("exists", () => {
-    let existingUser: User;
-
     it("should return true for existing user", async () => {
-      existingUser = await userRepository.create({
-        name: "Exists Test User",
-        age: 60,
-        email: "exists@example.com",
-      });
-
-      const exists = await userRepository.exists(existingUser.id);
+      const exists = await userRepository.exists(createdUser.id);
       expect(exists).toBe(true);
     });
 

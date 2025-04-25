@@ -31,6 +31,8 @@ vi.mock("@/db", (): DbModule => {
 import { db } from "../db";
 
 const applyMigrations = async () => {
+  await db.execute(sql`DROP SCHEMA IF EXISTS public CASCADE`);
+  await db.execute(sql`DROP SCHEMA IF EXISTS drizzle CASCADE`);
   await db.execute(sql`CREATE SCHEMA IF NOT EXISTS public`);
   await migrate(db as unknown as PgliteDatabase<typeof schema>, {
     migrationsFolder: "drizzle",

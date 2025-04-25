@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import type { PgliteDatabase } from "drizzle-orm/pglite";
+import * as schema from "./db/schema";
 import { usersTable } from "./db/schema";
 
 export type NewUser = {
@@ -13,9 +14,9 @@ export type User = NewUser & {
 };
 
 export class UserRepository {
-  private readonly db: PgliteDatabase;
+  private readonly db: PgliteDatabase<typeof schema>;
 
-  constructor(db: PgliteDatabase) {
+  constructor(db: PgliteDatabase<typeof schema>) {
     this.db = db;
   }
 
